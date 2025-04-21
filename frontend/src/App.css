@@ -1,0 +1,28 @@
+.app-container-panel {
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+*{
+    box-sizing: border-box;
+    margin: 0;
+}
+
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #cccccc;
+    width: 750px;
+    height: 750px;
+    border-radius: 10px;
+    position: relative;
+}
+
+.title{
+    position: absolute;
+    top: 50px;
+}

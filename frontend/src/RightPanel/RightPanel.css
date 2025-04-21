@@ -1,0 +1,59 @@
+.cylinder-container {
+    position: relative;
+    width: 100px; /* Adjust as needed */
+    height: 300px; /* Adjust as needed */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #cccccc;
+    margin: 0 60px;
+}
+
+.cylinder {
+    width: 60%;
+    height: 100%;
+    border: 2px solid black;
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+    background-color: #f0f0f0; /* Light background */
+    display: flex;
+    flex-direction: column-reverse; /* To make level grow from bottom */
+    color: #fff;
+    text-align: center;
+}
+
+.level {
+    background-color: #87ceeb; /* Light blue for liquid */
+    width: 100%;
+    /* Height will be set dynamically in the React component */
+}
+
+.volume-marks {
+    position: absolute;
+    left: calc(100% + 10px); /* Position to the right */
+    top: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 80%; /* Match cylinder height */
+}
+
+.volume-marks span {
+    font-size: 0.8em;
+    position: absolute; /* Needed for individual positioning */
+}
+
+.mark-top {
+    top: 0%;
+}
+
+.mark-middle {
+    top: 42.85%; /* Approximate 200/350 */
+    transform: translateY(-50%); /* Adjust for vertical centering */
+}
+
+.mark-bottom {
+    bottom: 0%;
+}

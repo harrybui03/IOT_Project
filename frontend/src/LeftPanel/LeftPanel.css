@@ -1,0 +1,130 @@
+.app-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+}
+
+.control-panel {
+    background-color: #f8f8f8;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    width: 350px;
+}
+
+.mode-tabs {
+    display: flex;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #ccc;
+}
+
+.mode-tab {
+    background-color: #eee;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+    border-radius: 5px 5px 0 0;
+    margin-right: 5px;
+}
+
+.mode-tab.active {
+    background-color: #ddd;
+}
+
+.input-form {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.form-group-select {
+    align-items: flex-start; /* Align label and select to the start */
+}
+
+.form-label {
+    width: 120px;
+    margin-right: 10px;
+    text-align: left;
+}
+
+.form-input,
+.form-select {
+    flex-grow: 1;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.form-select {
+    padding: 7px; /* Adjust padding for select to align better */
+}
+
+.unit {
+    margin-left: 10px;
+    font-size: 16px;
+    color: #555;
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.form-button,
+.stop-button,
+.reset-button {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.form-button {
+    background-color: #007bff;
+    color: white;
+}
+
+.form-button:hover {
+    background-color: #0056b3;
+}
+
+.stop-button {
+    background-color: #dc3545;
+    color: white;
+}
+
+.stop-button:hover {
+    background-color: #c82333;
+}
+
+.reset-button {
+    background-color: #6c757d;
+    color: white;
+}
+
+.reset-button:hover {
+    background-color: #5a6268;
+}
+
+.movement-panel {
+    background-color: #f8f8f8;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    width: 350px;
+}
+
+.movement-form {
+    display: flex;
+    flex-direction: column;
+}
