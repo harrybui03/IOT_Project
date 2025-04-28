@@ -8,7 +8,7 @@ function App() {
         <>
             <div className="app-container-panel">
                 <div className="container">
-                    <h1 className="title">Thiết bị điều khiểu kim tiêm</h1>
+                    <h1 className="title">Thiết bị điều khiển kim tiêm</h1>
                     <RightPanel/>
                     <LeftPanel/>
                 </div>

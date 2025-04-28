@@ -2,14 +2,17 @@ const express = require('express');
 const { SerialPort } = require('serialport');
 const { ReadlineParser } = require('@serialport/parser-readline');
 const cors = require('cors');
-
+require('dotenv').config();
+const serialPortPath = process.env.SERIAL_PORT_PATH || '/dev/tty-usbserial1';
+const port = process.env.PORT || 3000;
 const app = express();
-const port = 5000;
+
 app.use(cors());
 app.use(express.json());
 
+
 const serialPort = new SerialPort({
-    path: '/dev/tty-usbserial1',
+    path: serialPortPath,
     baudRate: 9600,
     autoOpen: false,
 })
