@@ -1,62 +1,94 @@
-import {useState} from "react";
-import './LeftPanel.css'
-import axios from 'axios'
+import { useState } from "react";
+import './LeftPanel.css';
+import axios from 'axios';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 const API_URL = 'http://localhost:5000/api';
+
 enum Mode {
     Suction,
     Injection,
 }
 
-export  function LeftPanel() {
-    const [suctionRadius, setSuctionRadius] = useState('');
+interface DataPayload {
+    mode: 'hut' | 'day';
+    time: number;
+    ml: number;
+}
+
+export function LeftPanel() {
     const [suctionCapacity, setSuctionCapacity] = useState('');
     const [suctionRate, setSuctionRate] = useState('');
-    const [injectionRadius, setInjectionRadius] = useState('');
     const [injectionCapacity, setInjectionCapacity] = useState('');
     const [injectionRate, setInjectionRate] = useState('');
     const [mode, setMode] = useState(Mode.Suction);
-    const [displacement, setDisplacement] = useState('');
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-
-    const validateNumber = (value: string): boolean => {
-        return !isNaN(Number(value)) && Number(value) >= 0;
-    };
 
     const handleStart = async () => {
         setLoading(true);
-        setError(null);
-        console.log('Start button clicked in', mode === Mode.Suction ? 'Suction' : 'Injection', 'mode');
-        let command = '';
         let isValid = true;
+        let payload: DataPayload | null = null;
+        let mlValue: number | null = null;
+        let timeValue: number | null = null;
+
         if (mode === Mode.Suction) {
-            if (!validateNumber(suctionRadius) || !validateNumber(suctionCapacity) || !validateNumber(suctionRate)) {
-                toast.error('Vui lòng nhập giá trị không âm cho bán kính, dung tích và lưu lượng.');
+            if (!validateNumber(suctionCapacity) || !validateNumber(suctionRate)) {
+                toast.error('Vui lòng nhập đúng định dạng số cho dung tích và thời gian hút.');
                 isValid = false;
             } else {
-                command = `START_SUCTION radius:${suctionRadius} capacity:${suctionCapacity} rate:${suctionRate}`;
-                console.log('Sending suction command:', command);
+                mlValue = roundToOneDecimal(parseFloat(suctionCapacity));
+                timeValue = parseFloat(suctionRate);
+
+                if (mlValue > 25) {
+                    toast.error('Dung tích hút không được lớn hơn 25 mL.');
+                    isValid = false;
+                } else if (timeValue < mlValue) {
+                    toast.error('Thời gian hút phải lớn hơn hoặc bằng dung tích hút.');
+                    isValid = false;
+                }
+
+                if (isValid) {
+                    payload = {
+                        mode: 'hut',
+                        time: timeValue,
+                        ml: mlValue,
+                    };
+                }
             }
-        } else {
-            if (!validateNumber(injectionRadius) || !validateNumber(injectionCapacity) || !validateNumber(injectionRate)) {
-                toast.error('Vui lòng nhập giá trị không âm cho bán kính, dung tích và lưu lượng.');
+        } else if (mode === Mode.Injection) {
+            if (!validateNumber(injectionCapacity) || !validateNumber(injectionRate)) {
+                toast.error('Vui lòng nhập đúng định dạng số cho dung tích và thời gian đẩy.');
                 isValid = false;
             } else {
-                command = `START_INJECTION radius:${injectionRadius} capacity:${injectionCapacity} rate:${injectionRate}`;
-                console.log('Sending injection command:', command);
+                mlValue = roundToOneDecimal(parseFloat(injectionCapacity));
+                timeValue = parseFloat(injectionRate);
+
+                if (mlValue > 25) {
+                    toast.error('Dung tích đẩy không được lớn hơn 25 mL.');
+                    isValid = false;
+                } else if (timeValue < mlValue) {
+                    toast.error('Thời gian đẩy phải lớn hơn hoặc bằng dung tích đẩy.');
+                    isValid = false;
+                }
+
+                if (isValid) {
+                    payload = {
+                        mode: 'day',
+                        time: timeValue,
+                        ml: mlValue,
+                    };
+                }
             }
         }
 
-        if (isValid) {
+        if (isValid && payload) {
             try {
-                const response = await axios.post(`${API_URL}/send-data`, { data: command });
-                console.log(response.data.message); // Log the response from the server
-                toast.success(response.data.message || 'Đã gửi lệnh bắt đầu.');
+                const response = await axios.post(`${API_URL}/send-data`, payload);
+                console.log(response.data.message);
+                toast.success(response.data.message || `Đã gửi lệnh ${mode === Mode.Suction ? 'hút' : 'đẩy'}.`);
             } catch (err: any) {
-                toast.error(err.message || 'Không thể bắt đầu thao tác.');
+                toast.error(err.message || `Không thể bắt đầu thao tác ${mode === Mode.Suction ? 'hút' : 'đẩy'}.`);
                 console.error('Error starting:', err);
             } finally {
                 setLoading(false);
@@ -68,7 +100,6 @@ export  function LeftPanel() {
 
     const handleStop = async () => {
         setLoading(true);
-        setError(null);
         console.log('Stop button clicked in', mode === Mode.Suction ? 'Suction' : 'Injection', 'mode');
         try {
             const response = await axios.post(`${API_URL}/stop-signal`);
@@ -82,46 +113,16 @@ export  function LeftPanel() {
         }
     };
 
-    const handleDisplace = async () => {
-        setLoading(true);
-        setError(null);
-        if (!validateNumber(displacement)) {
-            toast.error('Vui lòng nhập giá trị dịch chuyển không âm.');
-            setLoading(false);
-            return;
-        }
-        console.log('Displace button clicked with value:', displacement, 'mm');
-        try {
-            const response = await axios.post(`${API_URL}/movement`, { mm: displacement });
-            console.log(response.data.message);
-            toast.success(response.data.message || 'Đã gửi lệnh dịch chuyển.');
-        } catch (err: any) {
-            toast.error(err.message || 'Không thể dịch chuyển.');
-            console.error('Error displacing:', err);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleGoToZero = async () => {
-        setLoading(true);
-        setError(null);
-        console.log('Go to 0 button clicked');
-        try {
-            const response = await axios.post(`${API_URL}/movement`, { mm: 0 });
-            console.log(response.data.message);
-            toast.success(response.data.message || 'Đã gửi lệnh về điểm 0.');
-            setDisplacement('');
-        } catch (err: any) {
-            toast.error(err.message || 'Không thể về điểm 0.');
-            console.error('Error going to zero:', err);
-        } finally {
-            setLoading(false);
-        }
-    };
-
     const handleInputChange = (setValue: React.Dispatch<React.SetStateAction<string>>, value: string) => {
         setValue(value);
+    };
+
+    const validateNumber = (value: string): boolean => {
+        return !isNaN(Number(value)) && Number(value) >= 0;
+    };
+
+    const roundToOneDecimal = (num: number): number => {
+        return Math.round(num * 10) / 10;
     };
 
     return (
@@ -138,24 +139,13 @@ export  function LeftPanel() {
                         className={`mode-tab ${mode === Mode.Injection ? 'active' : ''}`}
                         onClick={() => setMode(Mode.Injection)}
                     >
-                        Chế độ tiêm
+                        Chế độ đẩy
                     </button>
                 </div>
-                {/* {error && <div className="error-message">{error}</div>} */} {/* Remove default error display */}
 
                 <form className="input-form">
                     {mode === Mode.Suction && (
                         <>
-                            <div className="form-group">
-                                <label className="form-label">Bán kính:</label>
-                                <input
-                                    type="number"
-                                    value={suctionRadius}
-                                    onChange={(e) => handleInputChange(setSuctionRadius, e.target.value)}
-                                    className="form-input"
-                                />
-                                <span className="unit">cm</span>
-                            </div>
                             <div className="form-group">
                                 <label className="form-label">Dung tích:</label>
                                 <input
@@ -167,30 +157,20 @@ export  function LeftPanel() {
                                 <span className="unit">mL</span>
                             </div>
                             <div className="form-group">
-                                <label className="form-label">Lưu lượng dòng chảy:</label>
+                                <label className="form-label">Thời Gian:</label>
                                 <input
                                     type="number"
                                     value={suctionRate}
                                     onChange={(e) => handleInputChange(setSuctionRate, e.target.value)}
-                                    className="form-input form-select"
+                                    className="form-input"
                                 />
-                                <span className="unit">mL/s</span>
+                                <span className="unit">sec</span>
                             </div>
                         </>
                     )}
 
                     {mode === Mode.Injection && (
                         <>
-                            <div className="form-group">
-                                <label className="form-label">Bán kính:</label>
-                                <input
-                                    type="number"
-                                    value={injectionRadius}
-                                    onChange={(e) => handleInputChange(setInjectionRadius, e.target.value)}
-                                    className="form-input"
-                                />
-                                <span className="unit">cm</span>
-                            </div>
                             <div className="form-group">
                                 <label className="form-label">Dung tích:</label>
                                 <input
@@ -202,14 +182,14 @@ export  function LeftPanel() {
                                 <span className="unit">mL</span>
                             </div>
                             <div className="form-group">
-                                <label className="form-label">Lưu lượng dòng chảy:</label>
+                                <label className="form-label">Thời Gian:</label>
                                 <input
                                     type="number"
                                     value={injectionRate}
                                     onChange={(e) => handleInputChange(setInjectionRate, e.target.value)}
                                     className="form-input"
                                 />
-                                <span className="unit">mL/s</span>
+                                <span className="unit">sec</span>
                             </div>
                         </>
                     )}
@@ -225,28 +205,6 @@ export  function LeftPanel() {
                 </form>
             </div>
 
-            <div className="movement-panel">
-                <form className="movement-form">
-                    <div className="form-group">
-                        <label className="form-label">Dịch Chuyển:</label>
-                        <input
-                            type="number"
-                            value={displacement}
-                            onChange={(e) => handleInputChange(setDisplacement, e.target.value)}
-                            className="form-input"
-                        />
-                        <span className="unit">mm</span>
-                    </div>
-                    <div className="form-actions">
-                        <button type="button" onClick={handleDisplace} className="form-button" disabled={loading}>
-                            {loading ? 'Đang xử lý...' : 'Dịch chuyển'}
-                        </button>
-                        <button type="button" onClick={handleGoToZero} className="reset-button" disabled={loading}>
-                            {loading ? 'Đang xử lý...' : 'Về điểm 0'}
-                        </button>
-                    </div>
-                </form>
-            </div>
             <ToastContainer />
         </div>
     );

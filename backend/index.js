@@ -36,12 +36,8 @@ const sendDataToSerialPort = async (data) => {
 };
 
 app.post('/api/send-data', async (req, res) => {
-    const { data } = req.body;
-    if (!data) {
-        return res.status(400).json({ error: 'Data to send is required.' });
-    }
     try {
-        await sendDataToSerialPort(data);
+        await sendDataToSerialPort(req.body);
         res.json({ message: 'Data sent successfully.' });
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -52,19 +48,6 @@ app.post('/api/stop-signal', async (req, res) => {
     try {
         await sendDataToSerialPort('STOP');
         res.json({ message: 'Stop signal sent.' });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-app.post('/api/movement', async (req, res) => {
-    const { mm } = req.body;
-    if (mm === undefined || mm === null) {
-        return res.status(400).json({ error: 'Movement distance (mm) is required.' });
-    }
-    try {
-        await sendDataToSerialPort(`MOVE ${mm}`);
-        res.json({ message: `Movement command sent: ${mm} mm` });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
