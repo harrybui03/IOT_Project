@@ -4,7 +4,7 @@ import axios from 'axios';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = 'http://localhost:3000/api';
 
 enum Mode {
     Suction,
@@ -24,9 +24,11 @@ export function LeftPanel() {
     const [injectionRate, setInjectionRate] = useState('');
     const [mode, setMode] = useState(Mode.Suction);
     const [loading, setLoading] = useState(false);
+    const [isPaused, setIsPaused] = useState(false); // New state to track pause/resume
 
     const handleStart = async () => {
         setLoading(true);
+        setIsPaused(false); // Reset to running state on start
         let isValid = true;
         let payload: DataPayload | null = null;
         let mlValue: number | null = null;
@@ -85,7 +87,6 @@ export function LeftPanel() {
         if (isValid && payload) {
             try {
                 const response = await axios.post(`${API_URL}/send-data`, payload);
-                console.log(response.data.message);
                 toast.success(response.data.message || `Đã gửi lệnh ${mode === Mode.Suction ? 'hút' : 'đẩy'}.`);
             } catch (err: any) {
                 toast.error(err.message || `Không thể bắt đầu thao tác ${mode === Mode.Suction ? 'hút' : 'đẩy'}.`);
@@ -98,16 +99,18 @@ export function LeftPanel() {
         }
     };
 
-    const handleStop = async () => {
+    const handlePauseResume = async () => {
         setLoading(true);
-        console.log('Stop button clicked in', mode === Mode.Suction ? 'Suction' : 'Injection', 'mode');
+        const action = isPaused ? 'resume' : 'pause';
+        console.log(`${action} button clicked in`, mode === Mode.Suction ? 'Suction' : 'Injection', 'mode');
         try {
-            const response = await axios.post(`${API_URL}/stop-signal`);
+            const response = await axios.post(`${API_URL}/stop-resume`, { action });
             console.log(response.data.message);
-            toast.success(response.data.message || 'Đã gửi lệnh dừng.');
+            toast.success(response.data.message || `Đã gửi lệnh ${action === 'pause' ? 'dừng' : 'tiếp tục'}.`);
+            setIsPaused(!isPaused); // Toggle pause state
         } catch (err: any) {
-            toast.error(err.message || 'Không thể dừng thao tác.');
-            console.error('Error stopping:', err);
+            toast.error(err.message || `Không thể ${action === 'pause' ? 'dừng' : 'tiếp tục'} thao tác.`);
+            console.error(`Error ${action}ing:`, err);
         } finally {
             setLoading(false);
         }
@@ -198,8 +201,13 @@ export function LeftPanel() {
                         <button type="button" onClick={handleStart} className="form-button" disabled={loading}>
                             {loading ? 'Đang xử lý...' : 'Bắt đầu'}
                         </button>
-                        <button type="button" onClick={handleStop} className="stop-button" disabled={loading}>
-                            {loading ? 'Đang xử lý...' : 'Dừng'}
+                        <button
+                            type="button"
+                            onClick={handlePauseResume}
+                            className="stop-button"
+                            disabled={loading}
+                        >
+                            {loading ? 'Đang xử lý...' : isPaused ? 'Tiếp tục' : 'Dừng'}
                         </button>
                     </div>
                 </form>

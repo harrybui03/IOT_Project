@@ -7,7 +7,12 @@ const serialPortPath = process.env.SERIAL_PORT_PATH || 'COM4';
 const port = process.env.PORT || 3000;
 const app = express();
 
-app.use(cors());
+app.use(cors({
+    origin: ['http://localhost:5173'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+}));
 app.use(express.json());
 
 
@@ -17,7 +22,6 @@ const serialPort = new SerialPort({
     autoOpen: false,
 })
 
-// Parser để đọc dữ liệu nếu cần
 const parser = serialPort.pipe(new ReadlineParser({ delimiter: '\r\n' }));
 
 // Mở cổng serial
