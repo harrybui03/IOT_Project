@@ -17,6 +17,11 @@ interface DataPayload {
     ml: number;
 }
 
+interface LogEntry {
+    timestamp: string;
+    body: DataPayload;
+}
+
 export function LeftPanel() {
     const [suctionCapacity, setSuctionCapacity] = useState('');
     const [suctionRate, setSuctionRate] = useState('');
@@ -24,11 +29,14 @@ export function LeftPanel() {
     const [injectionRate, setInjectionRate] = useState('');
     const [mode, setMode] = useState(Mode.Suction);
     const [loading, setLoading] = useState(false);
-    const [isPaused, setIsPaused] = useState(false); // New state to track pause/resume
+    const [isPaused, setIsPaused] = useState(false);
+    const [showLogs, setShowLogs] = useState(false);
+    const [logsData, setLogsData] = useState<LogEntry[]>([]);
+    const [logsLoading, setLogsLoading] = useState(false);
 
     const handleStart = async () => {
         setLoading(true);
-        setIsPaused(false); // Reset to running state on start
+        setIsPaused(false);
         let isValid = true;
         let payload: DataPayload | null = null;
         let mlValue: number | null = null;
@@ -107,7 +115,7 @@ export function LeftPanel() {
             const response = await axios.post(`${API_URL}/stop-resume`, { action });
             console.log(response.data.message);
             toast.success(response.data.message || `Đã gửi lệnh ${action === 'pause' ? 'dừng' : 'tiếp tục'}.`);
-            setIsPaused(!isPaused); // Toggle pause state
+            setIsPaused(!isPaused);
         } catch (err: any) {
             toast.error(err.message || `Không thể ${action === 'pause' ? 'dừng' : 'tiếp tục'} thao tác.`);
             console.error(`Error ${action}ing:`, err);
@@ -126,6 +134,26 @@ export function LeftPanel() {
 
     const roundToOneDecimal = (num: number): number => {
         return Math.round(num * 10) / 10;
+    };
+
+    const fetchLogs = async () => {
+        setLogsLoading(true);
+        setShowLogs(true);
+        try {
+            const response = await axios.get<LogEntry[]>(`${API_URL}/logs`);
+            setLogsData(response.data);
+        } catch (error: any) {
+            toast.error(error.message || 'Không thể tải dữ liệu nhật ký.');
+            console.error('Error fetching logs:', error);
+            setLogsData([]);
+        } finally {
+            setLogsLoading(false);
+        }
+    };
+
+    const handleCloseLogs = () => {
+        setShowLogs(false);
+        setLogsData([]);
     };
 
     return (
@@ -209,9 +237,50 @@ export function LeftPanel() {
                         >
                             {loading ? 'Đang xử lý...' : isPaused ? 'Tiếp tục' : 'Dừng'}
                         </button>
+                        <button
+                            type="button"
+                            onClick={fetchLogs}
+                            className="logs-button"
+                            disabled={logsLoading || showLogs}
+                        >
+                            {logsLoading ? 'Đang tải...' : 'Xem Nhật Ký'}
+                        </button>
                     </div>
                 </form>
             </div>
+
+            {showLogs && (
+                <div className="logs-modal">
+                    <div className="logs-content">
+                        <h3>Lịch Sử Thao Tác</h3>
+                        {logsData.length > 0 ? (
+                            <table className="logs-table">
+                                <thead>
+                                <tr>
+                                    <th>Thời Gian</th>
+                                    <th>Chế Độ</th>
+                                    <th>Dung Tích (mL)</th>
+                                    <th>Thời Gian (sec)</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {logsData.map((log, index) => (
+                                    <tr key={index}>
+                                        <td>{new Date(log.timestamp).toLocaleString()}</td>
+                                        <td>{log.body.mode === 'hut' ? 'Hút' : 'Đẩy'}</td>
+                                        <td>{log.body.ml}</td>
+                                        <td>{log.body.time}</td>
+                                    </tr>
+                                ))}
+                                </tbody>
+                            </table>
+                        ) : (
+                            <p>{logsLoading ? 'Đang tải dữ liệu nhật ký...' : 'Không có dữ liệu nhật ký.'}</p>
+                        )}
+                        <button onClick={handleCloseLogs} className="close-logs-button">Đóng</button>
+                    </div>
+                </div>
+            )}
 
             <ToastContainer />
         </div>

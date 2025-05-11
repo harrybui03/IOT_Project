@@ -1,3 +1,4 @@
+/* LeftPanel.css */
 .app-container {
     display: flex;
     flex-direction: column;
@@ -77,16 +78,18 @@
     display: flex;
     gap: 10px;
     margin-top: 20px;
+    justify-content: flex-start; /* Align buttons to the start */
 }
 
 .form-button,
 .stop-button,
-.reset-button {
+.logs-button {
     padding: 10px 15px;
     border: none;
     border-radius: 5px;
     font-size: 16px;
     cursor: pointer;
+    transition: background-color 0.3s ease;
 }
 
 .form-button {
@@ -94,7 +97,7 @@
     color: white;
 }
 
-.form-button:hover {
+.form-button:hover:not(:disabled) {
     background-color: #0056b3;
 }
 
@@ -103,17 +106,24 @@
     color: white;
 }
 
-.stop-button:hover {
+.stop-button:hover:not(:disabled) {
     background-color: #c82333;
 }
 
-.reset-button {
-    background-color: #6c757d;
+.logs-button {
+    background-color: #28a745; /* Example color for logs button */
     color: white;
 }
 
-.reset-button:hover {
-    background-color: #5a6268;
+.logs-button:hover:not(:disabled) {
+    background-color: #1e7e34;
+}
+
+.form-button:disabled,
+.stop-button:disabled,
+.logs-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
 }
 
 .movement-panel {
@@ -127,4 +137,70 @@
 .movement-form {
     display: flex;
     flex-direction: column;
+}
+
+/* Modal Styles */
+.logs-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.logs-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    max-width: 90%; /* Adjust as needed */
+    max-height: 90%; /* Adjust as needed */
+    overflow-y: auto;
+    position: relative;
+}
+
+.logs-content h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.logs-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.logs-table th,
+.logs-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.logs-table th {
+    background-color: #f2f2f2;
+}
+
+.close-logs-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 8px 12px;
+    background-color: #6c757d; /* Grey close button */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+}
+
+.close-logs-button:hover {
+    background-color: #5a6268;
 }
